@@ -1,0 +1,44 @@
+local BoxESP = {}
+function BoxESP.Create(Player)
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = Color3.fromRGB(194, 17, 17)
+    Box.Filled = false
+    Box.Transparency = 0.50
+    Box.Thickness = 3
+
+    local Updater
+
+    local function UpdateBox()
+        if Player and Player:IsA("Model") and Player:FindFirstChild("HumanoidRootPart") and Player:FindFirstChild("Head") then
+            local Target2dPosition, IsVisible = workspace.CurrentCamera:WorldToViewportPoint(Player.HumanoidRootPart.Position)
+            local scale_factor = 1 / (Target2dPosition.Z * math.tan(math.rad(workspace.CurrentCamera.FieldOfView * 0.5)) * 2) * 100
+            local width, height = math.floor(40 * scale_factor), math.floor(62 * scale_factor)
+
+            Box.Visible = IsVisible
+            Box.Size = Vector2.new(width, height)
+            Box.Position = Vector2.new(Target2dPosition.X - Box.Size.X / 2, Target2dPosition.Y - Box.Size.Y / 2)
+        else
+            Box.Visible = false
+            if not Player then
+                Box:Remove()
+                Updater:Disconnect()
+            end
+        end
+    end
+
+    Updater = game:GetService("RunService").RenderStepped:Connect(UpdateBox)
+
+    return Box
+end
+
+local Boxes = {}
+
+local function EnableBoxESP()
+    for _, Player in pairs(game:GetService("Workspace"):GetChildren()) do
+        if Player:IsA("Model") and Player:FindFirstChild("HumanoidRootPart") and Player:FindFirstChild("Head") then
+            local Box = BoxESP.Create(Player)
+            table.insert(Boxes, Box)
+        end
+    end
+end
